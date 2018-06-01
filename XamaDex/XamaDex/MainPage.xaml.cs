@@ -11,6 +11,7 @@ namespace XamaDex
 {
 	public partial class MainPage : ContentPage
 	{
+        static Label mainLabel;
         static Entry pkmnText;
         static Button searchButton;
         static Image pkmnImage;
@@ -44,7 +45,7 @@ namespace XamaDex
             var box = new BoxView { HorizontalOptions = LayoutOptions.FillAndExpand };
             box.HorizontalOptions = LayoutOptions.Fill;
 
-            panel.Children.Add(new Label
+            panel.Children.Add(mainLabel = new Label
             {
                 Text = "Ingresa el nombre de un Pokémon:",
                 FontSize = Device.GetNamedSize(NamedSize.Large, typeof(Label))
@@ -161,6 +162,7 @@ namespace XamaDex
 
         private static async void OnSearch(object sender, EventArgs e)
         {
+            mainLabel.Text = "Cargando...";
             PokemonSpecies p = await DataFetcher.GetNamedApiObject<PokemonSpecies>(pkmnText.Text.ToLower());
             Pokemon pk = await DataFetcher.GetNamedApiObject<Pokemon>(pkmnText.Text.ToLower());
             if(p == null || pk == null)
@@ -172,6 +174,7 @@ namespace XamaDex
                 try
                 {
                     pkmnId = p.ID;
+                    mainLabel.Text = "Ingresa el nombre de un Pokémon:";
                     GetMainInfo(pkmnId, p, pk);
                     GetBaseStats(pk);
                 }
