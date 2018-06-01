@@ -46,7 +46,7 @@ namespace XamaDex
 
             panel.Children.Add(new Label
             {
-                Text = "Ingresa el nombre de un Pokemon:",
+                Text = "Ingresa el nombre de un Pokémon:",
                 FontSize = Device.GetNamedSize(NamedSize.Large, typeof(Label))
             });
 
@@ -190,6 +190,7 @@ namespace XamaDex
             pkmnNameC = char.ToUpper(pkmnName.First()) + pkmnName.Substring(1).ToLower();
             pkmnLabel.Text = "#" + pkmnId.ToString() + ": " + pkmnNameC;
             pkmnGenera.Text = p.Genera[2].Name;
+
             if (pk.Types.Length > 1)
             {
                 var pkmnTypeOne = char.ToUpper(pk.Types[0].Type.Name.First()) + pk.Types[0].Type.Name.Substring(1).ToLower();
@@ -201,23 +202,17 @@ namespace XamaDex
                 var pkmnTypeOne = char.ToUpper(pk.Types[0].Type.Name.First()) + pk.Types[0].Type.Name.Substring(1).ToLower();
                 pkmnType.Text = "Type: " + pkmnTypeOne;
             }
-            switch (p.Generation.Name)
+
+            foreach(var _flavorText in p.FlavorTexts)
             {
-                case "generation-v":
-                    pkmnFlavorText.Text = p.FlavorTexts[36].FlavorText;
+                if(_flavorText.Language.Name.Contains("en"))
+                {
+                    pkmnFlavorText.Text = _flavorText.FlavorText;
+                    pkmnFlavorText.Text = pkmnFlavorText.Text.Replace("\n", " ");
+                    pkmnFlavorText.IsVisible = true;
                     break;
-                case "generation-vi":
-                    pkmnFlavorText.Text = p.FlavorTexts[25].FlavorText;
-                    break;
-                case "sun-moon":
-                    pkmnFlavorText.Text = p.FlavorTexts[2].FlavorText;
-                    break;
-                default:
-                    pkmnFlavorText.Text = p.FlavorTexts[p.FlavorTexts.Length - 1].FlavorText;
-                    break;
+                }
             }
-            pkmnFlavorText.Text = pkmnFlavorText.Text.Replace("\n", " ");
-            pkmnFlavorText.IsVisible = true;
         }
 
         private static void GetBaseStats(Pokemon pk)
