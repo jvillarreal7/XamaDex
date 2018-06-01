@@ -19,6 +19,7 @@ namespace XamaDex
         static string pkmnNameC;
         static Label pkmnLabel;
         static Label pkmnGenera;
+        static Label pkmnType;
         static Label pkmnFlavorText;
         static Label pkmnStatsTitle;
         static Label pkmnStatHP;
@@ -37,7 +38,11 @@ namespace XamaDex
             StackLayout panel = new StackLayout
             {
                 Spacing = 15
+                //WidthRequest = 50.0
             };
+
+            var box = new BoxView { HorizontalOptions = LayoutOptions.FillAndExpand };
+            box.HorizontalOptions = LayoutOptions.Fill;
 
             panel.Children.Add(new Label
             {
@@ -63,12 +68,21 @@ namespace XamaDex
             panel.Children.Add(pkmnLabel = new Label
             {
                 Text = "",
+                HorizontalTextAlignment = TextAlignment.Center,
                 FontSize = Device.GetNamedSize(NamedSize.Large, typeof(Label))
             });
 
             panel.Children.Add(pkmnGenera = new Label
             {
                 Text = "",
+                HorizontalTextAlignment = TextAlignment.Center,
+                FontSize = Device.GetNamedSize(NamedSize.Medium, typeof(Label))
+            });
+
+            panel.Children.Add(pkmnType = new Label
+            {
+                Text = "",
+                HorizontalTextAlignment = TextAlignment.Center,
                 FontSize = Device.GetNamedSize(NamedSize.Medium, typeof(Label))
             });
 
@@ -77,6 +91,7 @@ namespace XamaDex
                 Text = "",
                 IsVisible = false,
                 BackgroundColor = Color.Yellow,
+                HorizontalTextAlignment = TextAlignment.Center,
                 FontSize = Device.GetNamedSize(NamedSize.Medium, typeof(Label))
             });
 
@@ -84,70 +99,110 @@ namespace XamaDex
             {
                 IsVisible = false,
                 Text = "Stats",
+                HorizontalTextAlignment = TextAlignment.Center,
                 FontSize = Device.GetNamedSize(NamedSize.Large, typeof(Label))
             });
 
             panel.Children.Add(pkmnStatHP = new Label
             {
                 Text = "",
+                HorizontalTextAlignment = TextAlignment.Center,
                 FontSize = Device.GetNamedSize(NamedSize.Medium, typeof(Label))
             });
 
             panel.Children.Add(pkmnStatAtk = new Label
             {
                 Text = "",
+                HorizontalTextAlignment = TextAlignment.Center,
                 FontSize = Device.GetNamedSize(NamedSize.Medium, typeof(Label))
             });
 
             panel.Children.Add(pkmnStatDef = new Label
             {
                 Text = "",
+                HorizontalTextAlignment = TextAlignment.Center,
                 FontSize = Device.GetNamedSize(NamedSize.Medium, typeof(Label))
             });
 
             panel.Children.Add(pkmnStatSpA = new Label
             {
                 Text = "",
+                HorizontalTextAlignment = TextAlignment.Center,
                 FontSize = Device.GetNamedSize(NamedSize.Medium, typeof(Label))
             });
 
             panel.Children.Add(pkmnStatSpD = new Label
             {
                 Text = "",
+                HorizontalTextAlignment = TextAlignment.Center,
                 FontSize = Device.GetNamedSize(NamedSize.Medium, typeof(Label))
             });
 
             panel.Children.Add(pkmnStatSpe = new Label
             {
                 Text = "",
+                HorizontalTextAlignment = TextAlignment.Center,
                 FontSize = Device.GetNamedSize(NamedSize.Medium, typeof(Label))
             });
 
             panel.Children.Add(pkmnBaseStatTotal = new Label
             {
                 IsVisible = false,
-                Text = "Base Stat Total: ",
+                Text = "",
+                HorizontalTextAlignment = TextAlignment.Center,
                 FontSize = Device.GetNamedSize(NamedSize.Medium, typeof(Label)),
                 FontAttributes = FontAttributes.Bold
             });
 
 
             searchButton.Clicked += OnSearch;
-            this.Content = panel;
+            this.Content = new ScrollView { Content = panel };
         }
 
         private static async void OnSearch(object sender, EventArgs e)
         {
             PokemonSpecies p = await DataFetcher.GetNamedApiObject<PokemonSpecies>(pkmnText.Text.ToLower());
             Pokemon pk = await DataFetcher.GetNamedApiObject<Pokemon>(pkmnText.Text.ToLower());
-            pkmnId = p.ID;
+            if(p == null || pk == null)
+            {
+                throw new Exception("Eso no es un Pokemon o llegaste al límite de llamadas al API.");
+            }
+            else
+            {
+                try
+                {
+                    pkmnId = p.ID;
+                    GetMainInfo(pkmnId, p, pk);
+                    GetBaseStats(pk);
+                }
+                catch(Exception ex)
+                {
+                    throw new Exception("Ajale jaleo!");
+                }
+            } 
+        }
+
+        private static void GetMainInfo(int id, PokemonSpecies p, Pokemon pk)
+        {
             pkmnImage.Source = new Uri("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + pkmnId + ".png");
-            pkmnImage.Scale = 2.0;
+            pkmnImage.Scale = 1.5;
             pkmnName = p.Name;
             pkmnNameC = char.ToUpper(pkmnName.First()) + pkmnName.Substring(1).ToLower();
             pkmnLabel.Text = "#" + pkmnId.ToString() + ": " + pkmnNameC;
             pkmnGenera.Text = p.Genera[2].Name;
-            switch (p.Generation.Name) {
+            if (pk.Types.Length > 1)
+            {
+                var pkmnTypeOne = char.ToUpper(pk.Types[0].Type.Name.First()) + pk.Types[0].Type.Name.Substring(1).ToLower();
+                var pkmnTypeTwo = char.ToUpper(pk.Types[1].Type.Name.First()) + pk.Types[1].Type.Name.Substring(1).ToLower();
+                pkmnType.Text = "Type: " + pkmnTypeOne + "/" + pkmnTypeTwo;
+            }
+            else
+            {
+                var pkmnTypeOne = char.ToUpper(pk.Types[0].Type.Name.First()) + pk.Types[0].Type.Name.Substring(1).ToLower();
+                pkmnType.Text = "Type: " + pkmnTypeOne;
+            }
+            switch (p.Generation.Name)
+            {
                 case "generation-v":
                     pkmnFlavorText.Text = p.FlavorTexts[36].FlavorText;
                     break;
@@ -161,7 +216,12 @@ namespace XamaDex
                     pkmnFlavorText.Text = p.FlavorTexts[p.FlavorTexts.Length - 1].FlavorText;
                     break;
             }
+            pkmnFlavorText.Text = pkmnFlavorText.Text.Replace("\n", " ");
             pkmnFlavorText.IsVisible = true;
+        }
+
+        private static void GetBaseStats(Pokemon pk)
+        {
             pkmnStatsTitle.IsVisible = true;
             pkmnStatHP.Text = "HP: " + pk.Stats[5].BaseValue.ToString();
             pkmnStatAtk.Text = "Attack: " + pk.Stats[4].BaseValue.ToString();
@@ -171,7 +231,7 @@ namespace XamaDex
             pkmnStatSpe.Text = "Speed: " + pk.Stats[0].BaseValue.ToString();
             var pkmnBSTSum = pk.Stats[0].BaseValue + pk.Stats[1].BaseValue + pk.Stats[2].BaseValue + pk.Stats[3].BaseValue + pk.Stats[4].BaseValue + pk.Stats[5].BaseValue;
             pkmnBaseStatTotal.IsVisible = true;
-            pkmnBaseStatTotal.Text += pkmnBSTSum.ToString();
+            pkmnBaseStatTotal.Text = "Base Stat Total: " + pkmnBSTSum.ToString();
         }
     }
 }
